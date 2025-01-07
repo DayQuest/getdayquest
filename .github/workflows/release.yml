@@ -21,11 +21,11 @@ jobs:
         env:
           PRIVATE_REPO: dayquest/frontend
         run: |
-          RELEASE_DATA=$(gh release view --repo "$PRIVATE_REPO" --latest --json tagName,id -q '{tagName: .tagName, id: .id}')
+          RELEASE_DATA=$(gh release list --repo "$PRIVATE_REPO" --json tagName,id,publishedAt --jq 'sort_by(.publishedAt) | reverse | .[0]')
           echo "LATEST_RELEASE_TAG=$(echo "$RELEASE_DATA" | jq -r '.tagName')" >> $GITHUB_ENV
           echo "LATEST_RELEASE_ID=$(echo "$RELEASE_DATA" | jq -r '.id')" >> $GITHUB_ENV
 
-      - name: Download artifacts from latest release
+      - name: Download artifacts from the latest release
         env:
           PRIVATE_REPO: dayquest/frontend
         run: |
