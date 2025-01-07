@@ -11,8 +11,10 @@ jobs:
 
     steps:
       - name: Authenticate with GitHub CLI
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
         run: |
-          echo "frontend" | gh auth login --with-token
+          echo "$TOKEN" | gh auth login --with-token
 
       - name: Get latest release details
         id: get_latest_release
