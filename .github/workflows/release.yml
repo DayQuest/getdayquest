@@ -14,16 +14,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.TOKEN }}
         run: |
-          gh auth status || gh auth login --with-token <<< "$GH_TOKEN"
+          echo "${{ secrets.TOKEN }}" | gh auth login --with-token
 
       - name: Get latest release details
         id: get_latest_release
         env:
           PRIVATE_REPO: dayquest/frontend
         run: |
-          RELEASE_DATA=$(gh release list --repo "$PRIVATE_REPO" --json tagName,id,publishedAt --jq 'sort_by(.publishedAt) | reverse | .[0]')
+          RELEASE_DATA=$(gh release list --repo "$PRIVATE_REPO" --json tagName,publishedAt --jq 'sort_by(.publishedAt) | reverse | .[0]')
           echo "LATEST_RELEASE_TAG=$(echo "$RELEASE_DATA" | jq -r '.tagName')" >> $GITHUB_ENV
-          echo "LATEST_RELEASE_ID=$(echo "$RELEASE_DATA" | jq -r '.id')" >> $GITHUB_ENV
 
       - name: Download artifacts from the latest release
         env:
