@@ -13,13 +13,13 @@ jobs:
       - name: Authenticate with GitHub CLI
         env:
           GH_TOKEN: ${{ secrets.TOKEN }}
-        run: |
-          echo "${{ secrets.TOKEN }}" | gh auth login --with-token
+        run: gh auth status
 
       - name: Get latest release details
         id: get_latest_release
         env:
           PRIVATE_REPO: dayquest/frontend
+          GH_TOKEN: ${{ secrets.TOKEN }}
         run: |
           RELEASE_DATA=$(gh release list --repo "$PRIVATE_REPO" --json tagName,publishedAt --jq 'sort_by(.publishedAt) | reverse | .[0]')
           echo "LATEST_RELEASE_TAG=$(echo "$RELEASE_DATA" | jq -r '.tagName')" >> $GITHUB_ENV
@@ -27,6 +27,7 @@ jobs:
       - name: Download artifacts from the latest release
         env:
           PRIVATE_REPO: dayquest/frontend
+          GH_TOKEN: ${{ secrets.TOKEN }}
         run: |
           mkdir -p release-assets
           gh release download ${{ env.LATEST_RELEASE_TAG }} --repo "$PRIVATE_REPO" --dir release-assets
@@ -34,6 +35,7 @@ jobs:
       - name: Upload artifacts to the current release
         env:
           CURRENT_RELEASE_TAG: ${{ github.event.release.tag_name }}
+          GH_TOKEN: ${{ secrets.TOKEN }}
         run: |
           gh release upload "$CURRENT_RELEASE_TAG" ./release-assets/* --clobber
 
