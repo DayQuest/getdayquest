@@ -1,0 +1,40 @@
+name: Fetch Artifacts from External Repo
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  fetch-artifacts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Authenticate with GitHub CLI
+        run: |
+          echo "frontend" | gh auth login --with-token
+
+      - name: Get latest release details
+        id: get_latest_release
+        env:
+          PRIVATE_REPO: dayquest/frontend
+        run: |
+          RELEASE_DATA=$(gh release view --repo "$PRIVATE_REPO" --latest --json tagName,id -q '{tagName: .tagName, id: .id}')
+          echo "LATEST_RELEASE_TAG=$(echo "$RELEASE_DATA" | jq -r '.tagName')" >> $GITHUB_ENV
+          echo "LATEST_RELEASE_ID=$(echo "$RELEASE_DATA" | jq -r '.id')" >> $GITHUB_ENV
+
+      - name: Download artifacts from latest release
+        env:
+          PRIVATE_REPO: dayquest/frontend
+        run: |
+          mkdir -p release-assets
+          gh release download ${{ env.LATEST_RELEASE_TAG }} --repo "$PRIVATE_REPO" --dir release-assets
+
+      - name: Upload artifacts to the current release
+        env:
+          CURRENT_RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release upload "$CURRENT_RELEASE_TAG" ./release-assets/* --clobber
+
+      - name: Cleanup
+        run: rm -rf release-assets
